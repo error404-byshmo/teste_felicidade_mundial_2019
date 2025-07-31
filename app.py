@@ -140,25 +140,26 @@ elif choice == "9. Generosidade por Continente":
     st.header("9️⃣ Generosidade Média por Continente")
 
   
-    df_valid = df[df['Continent'] != 'Outro']
 
-    
-    grouped = [group['Generosity'].values for name, group in df_valid.groupby('Continent')]
+    df_valid = df[(df['Continent'] != 'Outro') & (df['Generosity'].notna())]
 
 
-    f_stat, p_value = f_oneway(*grouped)
+    grouped = [group['Generosity'].values for name, group in df_valid.groupby('Continent') if len(group) > 1]
 
-    
-    generosity_means = df_valid.groupby('Continent')['Generosity'].mean().sort_values()
-    st.bar_chart(generosity_means)
-
-    st.markdown(f"**Estatística F:** {f_stat:.4f}")
-    st.markdown(f"**p-valor:** {p_value:.4f}")
-
-    if p_value < 0.05:
-        st.success("→ Há diferença estatisticamente significativa na generosidade entre os continentes.")
+    if len(grouped) < 2:
+        st.warning("Não há dados suficientes para realizar o teste ANOVA.")
     else:
-        st.info("→ Não há diferença estatisticamente significativa na generosidade entre os continentes.")
+        try:
+            f_stat, p_value = f_oneway(*grouped)
+            st.markdown(f"**Estatística F:** {f_stat:.4f}")
+            st.markdown(f"**p-valor:** {p_value:.4f}")
+            if p_value < 0.05:
+                st.success("→ Há diferença estatisticamente significativa na generosidade entre os continentes.")
+            else:
+                st.info("→ Não há diferença estatisticamente significativa na generosidade entre os continentes.")
+        except Exception as e:
+            st.error(f"Erro ao executar ANOVA: {e}")
+
 
 elif choice == "10. Liberdade x Categoria de Felicidade":
     st.header("🔟 Liberdade para cada Categoria de Felicidade")
