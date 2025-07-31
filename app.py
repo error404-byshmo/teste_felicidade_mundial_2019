@@ -3,9 +3,10 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 from scipy.stats import skew, kurtosis
 import plotly.express as px
-from scipy.stats import f_oneway
+import pycountry as pc
 
 st.set_page_config(page_title="Felicidade Mundial 2019", layout="wide")
 
@@ -16,6 +17,7 @@ def load_and_prepare_data():
 
     # Criar Score Category com base nos tercis do Score
     tercis = df['Score'].quantile([0.33, 0.66])
+
     def categorize(score):
         if score <= tercis[0.33]:
             return "Baixo"
@@ -23,29 +25,45 @@ def load_and_prepare_data():
             return "Médio"
         else:
             return "Alto"
+
     df['Score Category'] = df['Score'].apply(categorize)
 
     # Criar variável Riqueza baseado no GDP per capita (mediana)
     median_gdp = df['GDP per capita'].median()
     df['Riqueza'] = df['GDP per capita'].apply(lambda x: "Rico" if x >= median_gdp else "Pobre")
 
-    # Verifica se 'Regional indicator' existe, se não cria coluna padrão
-    if 'Regional indicator' not in df.columns:
-        df['Regional indicator'] = "Desconhecido"
-
-    # Mapear Continente a partir do Regional indicator
-    continent_map = {
-        'Western Europe': 'Europa', 'North America': 'América',
-        'Sub-Saharan Africa': 'África', 'Central and Eastern Europe': 'Europa',
-        'Middle East and North Africa': 'África/Oriente Médio',
-        'Latin America and Caribbean': 'América Latina',
-        'Southeast Asia': 'Ásia', 'East Asia': 'Ásia'
-    }
-    df['Continent'] = df['Regional indicator'].map(continent_map).fillna("Outro")
+    # Adicionar coluna de continente
+    add_continent_column(df, 'Country or region')
 
     return df
 
+def add_continent_column(df, country_col):
+    def get_continent(country):
+        try:
+            country_code = pc.country_name_to_country_alpha_2(country, cn_name_format="default")
+            continent_code = pc.country_alpha_2_to_continent_code(country_code)
+            continent_name = {
+                'AF': 'Africa',
+                'NA': 'North America',
+                'OC': 'Oceania',
+                'AN': 'Antarctica',
+                'AS': 'Asia',
+                'EU': 'Europe',
+                'SA': 'South America'
+            }.get(continent_code, 'Unknown')
+            return continent_name
+        except:
+            return 'Unknown'
+
+    df['continent'] = df[country_col].apply(get_continent)
+
+# Chame a função para carregar e preparar os dados
 df = load_and_prepare_data()
+
+# Definindo cores
+background_color = "#ffffff"
+text_color = "#000000"
+accent_color = "#2c6e74"
 
 # Barra lateral para navegação
 st.sidebar.title("🔎 Navegação")
@@ -68,9 +86,7 @@ if choice == "Introdução":
     st.title("🌍 O Analista Socioeconômico Global")
     st.markdown("""
     Este relatório explora os fatores socioeconômicos associados à **felicidade mundial** com base no _World Happiness Report 2019_.
-
     Utilizando análise exploratória de dados, buscamos responder questões relacionadas à distribuição da felicidade, desigualdade entre países, fatores econômicos, sociais e culturais.
-
     **Tema:** Economia e Desenvolvimento Social  
     **Fonte:** [Kaggle - World Happiness Report 2019](https://www.kaggle.com/unsdsn/world-happiness)
     """)
@@ -85,9 +101,9 @@ elif choice == "1. Distribuição do Score":
 elif choice == "2. Histogramas e Boxplots":
     st.header("2️⃣ Histogramas e Boxplots do Score")
     fig, axs = plt.subplots(1, 2, figsize=(14, 5))
-    sns.histplot(df['Score'], kde=True, ax=axs[0], color='skyblue')
+    sns.histplot(df['Score'], kde=True, ax=axs[0], color='#1f77b4')  # Azul
     axs[0].set_title("Histograma do Score")
-    sns.boxplot(y=df['Score'], ax=axs[1], color='lightgreen')
+    sns.boxplot(y=df['Score'], ax=axs[1], color='#ff7f0e')  # Laranja
     axs[1].set_title("Boxplot do Score")
     st.pyplot(fig)
 
@@ -130,44 +146,51 @@ elif choice == "7. Dispersão: GDP x Score":
 
 elif choice == "8. Heatmap de Correlações":
     st.header("8️⃣ Mapa de Calor das Correlações")
+
+    colors = ["#fd9091", "#feb369", "#76e1e9", "#62d8ba", "#b497e5"]
+    custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", colors)
     numeric_cols = df.select_dtypes(include=np.number)
-    corr_matrix = numeric_cols.corr()
-    fig, ax = plt.subplots(figsize=(12, 8))
-    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=".2f", ax=ax)
+    corr_matrix = numeric_cols.corr(method='pearson')
+    fig, ax = plt.subplots(figsize=(10, 8))
+    sns.set_style("white")
+    heatmap = sns.heatmap(
+        corr_matrix,
+        annot=True,
+        fmt=".2f",
+        cmap=custom_cmap,
+        linewidths=0.5,
+        linecolor=background_color,
+        cbar_kws={"shrink": 0.8},
+        annot_kws={"color": text_color}
+    )
+
+    plt.title("Matriz de Correlação", fontsize=16, color=accent_color)
+    plt.xticks(rotation=45, ha="right", color=text_color)
+    plt.yticks(rotation=0, color=text_color)
+    plt.gcf().patch.set_facecolor(background_color)
+    plt.tight_layout()
     st.pyplot(fig)
 
 elif choice == "9. Generosidade por Continente":
-    st.header("9️⃣ Generosidade Média por Continente")
+    df_valid = df[df['Generosity'].notnull() & df['continent'].notnull()]  # Corrigido para 'continent'
 
-  
-    df.columns = [col.strip().title() for col in df.columns]
-
-   
-    df_valid = df[(df['Continent'] != 'Unknown') & (df['Generosity'].notna())]
-
-    
-    st.subheader("Quantidade de países por continente (dados válidos)")
-    continent_counts = df_valid.groupby('Continent').size()
-    st.dataframe(continent_counts)
-
-   
-    grouped = [group['Generosity'].values for name, group in df_valid.groupby('Continent') if len(group) > 1]
-
-    if len(grouped) < 2:
-        st.warning("Não há dados suficientes para realizar o teste ANOVA.")
+    if not df_valid.empty:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.boxplot(
+            data=df_valid,
+            x='continent',
+            y='Generosity',
+            palette='Set2'
+        )
+        plt.title('Distribuição da Generosidade por Continente', color=accent_color)
+        plt.xlabel('Continente', color=text_color)
+        plt.ylabel('Generosidade', color=text_color)
+        plt.xticks(rotation=45, color=text_color)
+        plt.yticks(color=text_color)
+        plt.gcf().patch.set_facecolor(background_color)
+        st.pyplot(fig)  # Use st.pyplot para mostrar o gráfico no Streamlit
     else:
-        try:
-            f_stat, p_value = f_oneway(*grouped)
-            st.markdown(f"**Estatística F:** {f_stat:.4f}")
-            st.markdown(f"**p-valor:** {p_value:.4f}")
-            if p_value < 0.05:
-                st.success("→ Há diferença estatisticamente significativa na generosidade entre os continentes.")
-            else:
-                st.info("→ Não há diferença estatisticamente significativa na generosidade entre os continentes.")
-        except Exception as e:
-            st.error(f"Erro ao executar ANOVA: {e}")
-
-
+        st.write("Não há dados suficientes para exibir o gráfico de generosidade por continente.")
 
 elif choice == "10. Liberdade x Categoria de Felicidade":
     st.header("🔟 Liberdade para cada Categoria de Felicidade")
