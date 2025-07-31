@@ -5,6 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.stats import skew, kurtosis
 import plotly.express as px
+from scipy.stats import f_oneway
 
 st.set_page_config(page_title="Felicidade Mundial 2019", layout="wide")
 
@@ -137,8 +138,27 @@ elif choice == "8. Heatmap de Correlações":
 
 elif choice == "9. Generosidade por Continente":
     st.header("9️⃣ Generosidade Média por Continente")
-    generosity_means = df.groupby('Continent')['Generosity'].mean().sort_values()
+
+  
+    df_valid = df[df['Continent'] != 'Outro']
+
+    
+    grouped = [group['Generosity'].values for name, group in df_valid.groupby('Continent')]
+
+
+    f_stat, p_value = f_oneway(*grouped)
+
+    
+    generosity_means = df_valid.groupby('Continent')['Generosity'].mean().sort_values()
     st.bar_chart(generosity_means)
+
+    st.markdown(f"**Estatística F:** {f_stat:.4f}")
+    st.markdown(f"**p-valor:** {p_value:.4f}")
+
+    if p_value < 0.05:
+        st.success("→ Há diferença estatisticamente significativa na generosidade entre os continentes.")
+    else:
+        st.info("→ Não há diferença estatisticamente significativa na generosidade entre os continentes.")
 
 elif choice == "10. Liberdade x Categoria de Felicidade":
     st.header("🔟 Liberdade para cada Categoria de Felicidade")
