@@ -78,7 +78,8 @@ pages = [
     "7. Dispersão: GDP x Score",
     "8. Heatmap de Correlações",
     "9. Generosidade por Continente",
-    "10. Liberdade x Categoria de Felicidade"
+    "10. Liberdade x Categoria de Felicidade",
+    "11. Mapa Múndi de Felicidade"  # Adicionado novo item
 ]
 choice = st.sidebar.radio("Escolha uma seção:", pages)
 
@@ -200,3 +201,32 @@ elif choice == "10. Liberdade x Categoria de Felicidade":
     sns.boxplot(data=df, x='Score Category', y='Freedom to make life choices', palette='pastel')
     ax.set_title("Liberdade x Categoria de Felicidade")
     st.pyplot(fig)
+
+elif choice == "11. Mapa Múndi de Felicidade":
+    st.header("🌍 Mapa Múndi de Felicidade")
+    
+    # Criar um DataFrame para o mapa
+    map_df = df[['Country or region', 'Score', 'GDP per capita', 'Healthy life expectancy', 'Generosity', 'Freedom to make life choices']]
+    
+    # Criar o mapa com uma paleta de cores personalizada em verde e roxo
+    fig = px.choropleth(
+        map_df,
+        locations='Country or region',  # Nome do país
+        locationmode='country names',  # Usar nomes de países
+        color='Score',  # Cor baseada no Score
+        hover_name='Country or region',  # Nome do país ao passar o mouse
+        hover_data={
+            'GDP per capita': True,
+            'Healthy life expectancy': True,
+            'Generosity': True,
+            'Freedom to make life choices': True,
+            'Score': True
+        },
+        color_continuous_scale=px.colors.sequential.Viridis,  # Paleta de cores verde e roxo
+        title='Mapa Múndi de Felicidade 2019',
+        labels={'Score': 'Score de Felicidade'},
+        width=1000,  # Aumentar a largura do mapa
+        height=600   # Aumentar a altura do mapa
+    )
+    
+    st.plotly_chart(fig)
