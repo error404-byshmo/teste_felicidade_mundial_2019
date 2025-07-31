@@ -139,15 +139,18 @@ elif choice == "8. Heatmap de Correlações":
 elif choice == "9. Generosidade por Continente":
     st.header("9️⃣ Generosidade Média por Continente")
 
-    # Filtragem de dados
-    df['Continent'] = df['Continent'].fillna('Outro')
-    df_valid = df[(df['Continent'] != 'Outro') & (df['Generosity'].notna())]
+  
+    df.columns = [col.strip().title() for col in df.columns]
 
+   
+    df_valid = df[(df['Continent'] != 'Unknown') & (df['Generosity'].notna())]
+
+    
     st.subheader("Quantidade de países por continente (dados válidos)")
-    counts = df_valid['Continent'].value_counts()
-    st.write(counts)
+    continent_counts = df_valid.groupby('Continent').size()
+    st.dataframe(continent_counts)
 
-    # Agrupamento para ANOVA
+   
     grouped = [group['Generosity'].values for name, group in df_valid.groupby('Continent') if len(group) > 1]
 
     if len(grouped) < 2:
@@ -158,9 +161,9 @@ elif choice == "9. Generosidade por Continente":
             st.markdown(f"**Estatística F:** {f_stat:.4f}")
             st.markdown(f"**p-valor:** {p_value:.4f}")
             if p_value < 0.05:
-                st.success("Há diferença estatisticamente significativa na generosidade entre os continentes.")
+                st.success("→ Há diferença estatisticamente significativa na generosidade entre os continentes.")
             else:
-                st.info("Não há diferença estatisticamente significativa na generosidade entre os continentes.")
+                st.info("→ Não há diferença estatisticamente significativa na generosidade entre os continentes.")
         except Exception as e:
             st.error(f"Erro ao executar ANOVA: {e}")
 
