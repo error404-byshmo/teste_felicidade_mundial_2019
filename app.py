@@ -10,6 +10,224 @@ import pycountry as pc
 
 st.set_page_config(page_title="Felicidade Mundial 2019", layout="wide")
 
+# Dicionário para mapear nomes de países para códigos de duas letras
+country_to_alpha2 = {country.name: country.alpha_2 for country in pc.countries}
+
+# Dicionário para mapear códigos de países para continentes
+continent_mapping = {
+    'AF': 'Africa',
+    'NA': 'North America',
+    'OC': 'Oceania',
+    'AN': 'Antarctica',
+    'AS': 'Asia',
+    'EU': 'Europe',
+    'SA': 'South America'
+}
+
+# Dicionário para mapear códigos de países para continentes
+country_to_continent = {
+    'AF': 'Africa',
+    'AL': 'Europe',
+    'DZ': 'Africa',
+    'AS': 'Asia',
+    'AD': 'Europe',
+    'AO': 'Africa',
+    'AG': 'North America',
+    'AR': 'South America',
+    'AM': 'Asia',
+    'AU': 'Oceania',
+    'AT': 'Europe',
+    'AZ': 'Asia',
+    'BS': 'North America',
+    'BH': 'Asia',
+    'BD': 'Asia',
+    'BB': 'North America',
+    'BY': 'Europe',
+    'BE': 'Europe',
+    'BZ': 'North America',
+    'BJ': 'Africa',
+    'BT': 'Asia',
+    'BO': 'South America',
+    'BA': 'Europe',
+    'BW': 'Africa',
+    'BR': 'South America',
+    'BN': 'Asia',
+    'BG': 'Europe',
+    'BF': 'Africa',
+    'BI': 'Africa',
+    'KH': 'Asia',
+    'CM': 'Africa',
+    'CA': 'North America',
+    'CV': 'Africa',
+    'CF': 'Africa',
+    'TD': 'Africa',
+    'CL': 'South America',
+    'CN': 'Asia',
+    'CO': 'South America',
+    'KM': 'Africa',
+    'CD': 'Africa',
+    'CG': 'Africa',
+    'CR': 'North America',
+    'HR': 'Europe',
+    'CU': 'North America',
+    'CY': 'Asia',
+    'CZ': 'Europe',
+    'DK': 'Europe',
+    'DJ': 'Africa',
+    'DM': 'North America',
+    'DO': 'North America',
+    'EC': 'South America',
+    'EG': 'Africa',
+    'SV': 'North America',
+    'GQ': 'Africa',
+    'ER': 'Africa',
+    'EE': 'Europe',
+    'SZ': 'Africa',
+    'ET': 'Africa',
+    'FJ': 'Oceania',
+    'FI': 'Europe',
+    'FR': 'Europe',
+    'GA': 'Africa',
+    'GM': 'Africa',
+    'GE': 'Asia',
+    'DE': 'Europe',
+    'GH': 'Africa',
+    'GR': 'Europe',
+    'GT': 'North America',
+    'GN': 'Africa',
+    'GW': 'Africa',
+    'GY': 'South America',
+    'HT': 'North America',
+    'HN': 'North America',
+    'HU': 'Europe',
+    'IS': 'Europe',
+    'IN': 'Asia',
+    'ID': 'Asia',
+    'IR': 'Asia',
+    'IQ': 'Asia',
+    'IE': 'Europe',
+    'IL': 'Asia',
+    'IT': 'Europe',
+    'JM': 'North America',
+    'JP': 'Asia',
+    'KE': 'Africa',
+    'KI': 'Oceania',
+    'KR': 'Asia',
+    'KW': 'Asia',
+    'KG': 'Asia',
+    'LA': 'Asia',
+    'LV': 'Europe',
+    'LB': 'Asia',
+    'LS': 'Africa',
+    'LR': 'Africa',
+    'LY': 'Africa',
+    'LT': 'Europe',
+    'LU': 'Europe',
+    'MG': 'Africa',
+    'MW': 'Africa',
+    'MY': 'Asia',
+    'MV': 'Asia',
+    'ML': 'Africa',
+    'MT': 'Europe',
+    'MH': 'Oceania',
+    'MR': 'Africa',
+    'MU': 'Africa',
+    'MX': 'North America',
+    'FM': 'Oceania',
+    'MD': 'Europe',
+    'MC': 'Europe',
+    'MN': 'Asia',
+    'ME': 'Europe',
+    'MA': 'Africa',
+    'MZ': 'Africa',
+    'MM': 'Asia',
+    'NA': 'Africa',
+    'NR': 'Oceania',
+    'NP': 'Asia',
+    'NL': 'Europe',
+    'NZ': 'Oceania',
+    'NI': 'North America',
+    'NE': 'Africa',
+    'NG': 'Africa',
+    'NO': 'Europe',
+    'OM': 'Asia',
+    'PK': 'Asia',
+    'PW': 'Oceania',
+    'PA': 'North America',
+    'PG': 'Oceania',
+    'PY': 'South America',
+    'PE': 'South America',
+    'PH': 'Asia',
+    'PL': 'Europe',
+    'PT': 'Europe',
+    'QA': 'Asia',
+    'RE': 'Africa',
+    'RO': 'Europe',
+    'RU': 'Europe',
+    'RW': 'Africa',
+    'WS': 'Oceania',
+    'SM': 'Europe',
+    'ST': 'Africa',
+    'SA': 'Asia',
+    'SN': 'Africa',
+    'RS': 'Europe',
+    'SC': 'Africa',
+    'SL': 'Africa',
+    'SG': 'Asia',
+    'SK': 'Europe',
+    'SI': 'Europe',
+    'SB': 'Oceania',
+    'SO': 'Africa',
+    'ZA': 'Africa',
+    'ES': 'Europe',
+    'LK': 'Asia',
+    'SD': 'Africa',
+    'SR': 'South America',
+    'SZ': 'Africa',
+    'SE': 'Europe',
+    'CH': 'Europe',
+    'SY': 'Asia',
+    'TJ': 'Asia',
+    'TZ': 'Africa',
+    'TH': 'Asia',
+    'TG': 'Africa',
+    'TO': 'Oceania',
+    'TT': 'North America',
+    'TN': 'Africa',
+    'TR': 'Asia',
+    'TM': 'Asia',
+    'TV': 'Oceania',
+    'UG': 'Africa',
+    'UA': 'Europe',
+    'AE': 'Asia',
+    'GB': 'Europe',
+    'US': 'North America',
+    'UY': 'South America',
+    'UZ': 'Asia',
+    'VU': 'Oceania',
+    'VE': 'South America',
+    'VN': 'Asia',
+    'YE': 'Asia',
+    'ZM': 'Africa',
+    'ZW': 'Africa'
+}
+
+def add_continent_column(df, country_col):
+    def get_continent(country):
+        try:
+            # Obter o código do país a partir do dicionário
+            country_code = country_to_alpha2.get(country, None)
+            if country_code:
+                continent = country_to_continent.get(country_code, 'Unknown')
+                return continent
+            else:
+                return 'Unknown'
+        except Exception as e:
+            st.write(f"Erro ao processar o país: {country}. Erro: {e}")
+            return 'Unknown'
+
+    df['continent'] = df[country_col].apply(get_continent)
+
 @st.cache_data
 def load_and_prepare_data():
     # Carrega o dataset
@@ -34,31 +252,12 @@ def load_and_prepare_data():
 
     # Adicionar coluna de continente
     add_continent_column(df, 'Country or region')
-
+    
     return df
-
-def add_continent_column(df, country_col):
-    def get_continent(country):
-        try:
-            country_code = pc.country_name_to_country_alpha_2(country, cn_name_format="default")
-            continent_code = pc.country_alpha_2_to_continent_code(country_code)
-            continent_name = {
-                'AF': 'Africa',
-                'NA': 'North America',
-                'OC': 'Oceania',
-                'AN': 'Antarctica',
-                'AS': 'Asia',
-                'EU': 'Europe',
-                'SA': 'South America'
-            }.get(continent_code, 'Unknown')
-            return continent_name
-        except:
-            return 'Unknown'
-
-    df['continent'] = df[country_col].apply(get_continent)
 
 # Chame a função para carregar e preparar os dados
 df = load_and_prepare_data()
+
 
 # Definindo cores
 background_color = "#ffffff"
@@ -79,7 +278,7 @@ pages = [
     "8. Heatmap de Correlações",
     "9. Generosidade por Continente",
     "10. Liberdade x Categoria de Felicidade",
-    "11. Mapa Múndi de Felicidade"  # Adicionado novo item
+    "11. Mapa Múndi de Felicidade"
 ]
 choice = st.sidebar.radio("Escolha uma seção:", pages)
 
@@ -91,6 +290,7 @@ if choice == "Introdução":
     **Tema:** Economia e Desenvolvimento Social  
     **Fonte:** [Kaggle - World Happiness Report 2019](https://www.kaggle.com/unsdsn/world-happiness)
     """)
+
 
 elif choice == "1. Distribuição do Score":
     st.header("1️⃣ Distribuição do Score de Felicidade")
@@ -171,27 +371,22 @@ elif choice == "8. Heatmap de Correlações":
     plt.gcf().patch.set_facecolor(background_color)
     plt.tight_layout()
     st.pyplot(fig)
-
+    
 elif choice == "9. Generosidade por Continente":
-    df_valid = df[df['Generosity'].notnull() & df['continent'].notnull()]  # Corrigido para 'continent'
+    st.subheader("📦 Distribuição da Generosidade por Continente")
+    df_valid = df[df['continent'] != 'Unknown']
 
     if not df_valid.empty:
         fig, ax = plt.subplots(figsize=(10, 6))
-        sns.boxplot(
-            data=df_valid,
-            x='continent',
-            y='Generosity',
-            palette='Set2'
-        )
-        plt.title('Distribuição da Generosidade por Continente', color=accent_color)
-        plt.xlabel('Continente', color=text_color)
-        plt.ylabel('Generosidade', color=text_color)
-        plt.xticks(rotation=45, color=text_color)
-        plt.yticks(color=text_color)
-        plt.gcf().patch.set_facecolor(background_color)
-        st.pyplot(fig)  # Use st.pyplot para mostrar o gráfico no Streamlit
+        sns.boxplot(data=df_valid, x='continent', y='Generosity', palette='Set2')
+        plt.title('Distribuição da Generosidade por Continente')
+        plt.xlabel('Continente')
+        plt.ylabel('Generosidade')
+        plt.xticks(rotation=45)
+        st.pyplot(fig)
     else:
-        st.write("Não há dados suficientes para exibir o gráfico de generosidade por continente.")
+        st.warning("Não há dados suficientes para exibir o gráfico de generosidade por continente.")
+        
 
 elif choice == "10. Liberdade x Categoria de Felicidade":
     st.header("🔟 Liberdade para cada Categoria de Felicidade")
